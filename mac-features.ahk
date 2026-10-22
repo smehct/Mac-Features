@@ -19,6 +19,7 @@ CoordMode "Mouse", "Screen"
 ;   Option+5/6/8/9 -> [ ] { },  Option+7 -> |,  Option+Shift+7 -> \,  Option+N -> ~
 ;   Shift+Backspace -> Delete (Mac keyboards have no forward-delete key)
 ;   Cmd+Space    -> Windows Search (Win key only; Alt+Space stays the window menu)
+;   Cmd+O in Explorer on a PDF -> opens it in Vorschau (vorschau\)
 
 global TempDir := A_Temp "\MacShots"
 global OverlayHwnd := 0
@@ -34,12 +35,67 @@ OnMessage(0x20, OnSetCursor)  ; WM_SETCURSOR
 SetTimer ThumbTick, 25
 A_IconTip := "Mac Features (Cmd+G = @, Cmd+Shift+4 = Screenshot)"
 
+IsVorschau() {
+    if !WinActive("ahk_exe msedge.exe") && !WinActive("ahk_exe chrome.exe")
+        return false
+    title := WinGetTitle("A")
+    return title = "Vorschau" || InStr(title, " – Vorschau")
+}
+
+#HotIf IsVorschau()
+#o::Send("^o")
+#r::Send("^r")
+#l::Send("^l")
+#+r::Send("^+r")
+#+a::Send("^+a")
+#=::Send("^=")
+#-::Send("^-")
+#NumpadAdd::Send("^{NumpadAdd}")
+#NumpadSub::Send("^{NumpadSub}")
+#0::Send("^0")
+#9::Send("^9")
+#BackSpace::Send("^{BackSpace}")
+#g::Send("^g")
+#n::Send("^n")
+#+g::Send("^+g")
+#x::Send("^x")
+#d::Send("^d")
+#t::Send("^t")
+#+Left::Send("^+{Left}")
+#+Right::Send("^+{Right}")
+#HotIf
+
+#o:: {
+    if WinActive("ahk_class CabinetWClass") {
+        pdfs := []
+        try {
+            hwnd := WinGetID("A")
+            for win in ComObject("Shell.Application").Windows() {
+                if win.HWND = hwnd {
+                    for item in win.Document.SelectedItems() {
+                        if StrLower(item.Path) ~= "\.pdf$"
+                            pdfs.Push(item.Path)
+                    }
+                    break
+                }
+            }
+        }
+        if pdfs.Length {
+            for f in pdfs
+                OpenVorschau(f)
+            return
+        }
+    }
+    Send("^o")
+}
+
 #g::SendText("@")
 <!g::SendText("@")
 #c::Send("^c")
 #v::Send("^v")  ; replaces Windows' clipboard history on Win+V
 #a::Send("^a")
-#z::Send("^z")
+$#z::Send("^z")  ; Windows' own Win+Z (snap layouts) is also off via DisabledHotkeys
+#+z::Send("^y")  ; redo: Ctrl+Y works in Office, browsers and most Windows apps
 $#s::Send("^s")  ; $ so the Send("#s") in Cmd+Space doesn't trigger it
 #+s::Send("^+s")  ; save as (replaces Windows' Snipping Tool on Win+Shift+S)
 #p::Send("^p")
@@ -461,3 +517,5 @@ CleanOldShots() {
             try FileDelete A_LoopFileFullPath
     }
 }
+
+#Include vorschau\vorschau.ahk
