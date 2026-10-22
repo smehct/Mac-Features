@@ -53,7 +53,7 @@ Ausserdem sind die Taste links neben der 1 (§ °) und die Taste neben der linke
 2. Mit gedrückter Maustaste einen Rahmen aufziehen. Der gewählte Bereich wird hell. Mit **Esc** abbrechen.
 3. Unten rechts erscheint ein Vorschaubild:
    - **Ziehen:** Das Bild per Drag & Drop direkt in ein Programm ziehen, z.B. in einen Chat, eine Mail oder einen Ordner.
-   - **Klicken:** Das Bild öffnet sich.
+   - **Klicken:** Das Bild wird auf dem Desktop gespeichert und öffnet sich im Snipping Tool zum Bearbeiten. Ist das Snipping Tool nicht installiert, öffnet sich das Bild im Standardprogramm.
    - **Nichts tun:** Nach etwa 6 Sekunden liegt das Bild als `Screenshot JJJJ-MM-TT at HH.MM.SS.png` auf dem Desktop. Solange die Maus über dem Vorschaubild ist, bleibt es stehen.
 
 ## Installation

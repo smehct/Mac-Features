@@ -315,8 +315,35 @@ ThumbTick() {
     }
     f := Thumb.file
     FinishThumb()
-    ; Mac opens the preview on click; the file is on the Desktop by now.
-    Run '"' A_Desktop "\" StrSplit(f, "\")[-1] '"'
+    ; Mac opens the markup view on click; the file is on the Desktop by now.
+    saved := A_Desktop "\" StrSplit(f, "\")[-1]
+    if !OpenInSnippingTool(saved)
+        Run '"' saved '"'
+}
+
+; Opens an image in Snipping Tool through its "Open with" ProgID (looked up, because the AppX
+; hash is not documented). Snipping Tool ignores files passed on its command line or protocol.
+OpenInSnippingTool(path) {
+    progId := ""
+    loop reg "HKCR\.png\OpenWithProgids" {
+        try aumid := RegRead("HKCR\" A_LoopRegName "\Application", "AppUserModelID")
+        catch
+            continue
+        if InStr(aumid, "Microsoft.ScreenSketch_") = 1 {
+            progId := A_LoopRegName
+            break
+        }
+    }
+    if progId = ""
+        return false
+    sei := Buffer(112, 0)  ; SHELLEXECUTEINFOW on x64
+    NumPut("uint", 112, sei, 0)
+    NumPut("uint", 0x1, sei, 4)  ; SEE_MASK_CLASSNAME
+    NumPut("ptr", StrPtr("open"), sei, 16)
+    NumPut("ptr", StrPtr(path), sei, 24)
+    NumPut("int", 1, sei, 48)  ; SW_SHOWNORMAL
+    NumPut("ptr", StrPtr(progId), sei, 72)
+    return DllCall("shell32\ShellExecuteExW", "ptr", sei)
 }
 
 ; Moves the screenshot to the Desktop (unless it was dragged elsewhere) and closes the thumbnail.
@@ -335,19 +362,27 @@ FinishThumb(save := true) {
 }
 
 ; Starts an OLE file drag from the temp file. Returns true if it was dropped on a target.
+; The data object comes from the parent folder's IShellFolder::GetUIObjectOf, like Explorer's
+; own drags: it offers CF_HDROP, FileContents etc. (SHCreateDataObject offers no formats, so
+; browsers and Electron apps ignore the drop.)
 StartDrag(file) {
-    pidl := 0, pdo := 0, effect := 0
+    pidl := 0, psf := 0, child := 0, pdo := 0, effect := 0
     if DllCall("shell32\SHParseDisplayName", "wstr", file, "ptr", 0, "ptr*", &pidl, "uint", 0, "ptr", 0)
         return false
-    iid := Buffer(16)
-    DllCall("ole32\CLSIDFromString", "str", "{0000010e-0000-0000-C000-000000000046}", "ptr", iid)
-    hr := DllCall("shell32\SHCreateDataObject", "ptr", 0, "uint", 1, "ptr*", pidl, "ptr", 0
-        , "ptr", iid, "ptr*", &pdo)
-    if !hr
-        DllCall("shell32\SHDoDragDrop", "ptr", 0, "ptr", pdo, "ptr", 0, "uint", 1, "uint*", &effect)  ; DROPEFFECT_COPY
+    iidFolder := Buffer(16), iidData := Buffer(16)
+    DllCall("ole32\CLSIDFromString", "str", "{000214E6-0000-0000-C000-000000000046}", "ptr", iidFolder)
+    DllCall("ole32\CLSIDFromString", "str", "{0000010e-0000-0000-C000-000000000046}", "ptr", iidData)
+    try {
+        if !DllCall("shell32\SHBindToParent", "ptr", pidl, "ptr", iidFolder, "ptr*", &psf, "ptr*", &child) {
+            ComCall(10, psf, "ptr", 0, "uint", 1, "ptr*", child, "ptr", iidData, "ptr", 0, "ptr*", &pdo)  ; GetUIObjectOf
+            DllCall("shell32\SHDoDragDrop", "ptr", 0, "ptr", pdo, "ptr", 0, "uint", 1, "uint*", &effect)  ; DROPEFFECT_COPY
+        }
+    }
     if pdo
         ObjRelease(pdo)
-    DllCall("ole32\CoTaskMemFree", "ptr", pidl)
+    if psf
+        ObjRelease(psf)
+    DllCall("ole32\CoTaskMemFree", "ptr", pidl)  ; child points into pidl, no separate free
     return effect != 0
 }
 
