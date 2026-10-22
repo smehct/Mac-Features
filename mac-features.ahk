@@ -279,15 +279,77 @@ Capture(x, y, w, h) {
 ShowThumb(file, name, w, h) {
     global Thumb
     FinishThumb()
-    s := Min(220 / w, 140 / h, 1)
+    s := Min(293 / w, 187 / h, 1)
     tw := Max(1, Round(w * s)), th := Max(1, Round(h * s))
-    g := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x08000000")
-    g.MarginX := 0, g.MarginY := 0
-    g.BackColor := "FFFFFF"
-    g.Add("Picture", "x2 y2 w" tw " h" th, file)
+    bw := 10  ; width of the glass frame around the picture, in pixels
+    gw := tw + 2 * bw, gh := th + 2 * bw
     MonitorGetWorkArea(MonitorGetPrimary(), &l, &t, &r, &b)
-    g.Show("NoActivate x" (r - tw - 4 - 16) " y" (b - th - 4 - 16) " w" (tw + 4) " h" (th + 4))
-    Thumb := {gui: g, file: file, name: name, deadline: A_TickCount + 6000}
+    gx := r - gw - 16, gy := b - gh - 16
+
+    ; Two windows: an acrylic "glass" pane, and the picture on top of it. GDI content drawn
+    ; inside an acrylic window turns semi-transparent, so the picture needs its own window.
+    glass := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x08000000")
+    glass.BackColor := "000000"
+    glass.Show("NoActivate x" gx " y" gy " w" gw " h" gh)
+    SetGlass(glass.Hwnd)
+    Rounded(glass.Hwnd, 2, 0xFFFFFF)  ; DWMWCP_ROUND, light edge
+
+    g := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x08000000 +Owner" glass.Hwnd)
+    g.MarginX := 0, g.MarginY := 0
+    g.Add("Picture", "x0 y0 w" tw " h" th, file)
+    g.Show("NoActivate x" (gx + bw) " y" (gy + bw) " w" tw " h" th)
+    Rounded(g.Hwnd, 3)  ; DWMWCP_ROUNDSMALL
+    Thumb := {gui: g, glass: glass, bw: bw, file: file, name: name, deadline: A_TickCount + 6000}
+}
+
+MoveThumb(t, x, y) {
+    t.glass.Move(x, y)
+    t.gui.Move(x + t.bw, y + t.bw)
+}
+
+; The thumbnail follows the mouse to the right; released past 40 px it slides off and is
+; saved right away, otherwise it snaps back.
+SwipeThumb(startX) {
+    t := Thumb
+    WinGetPos &gx, &gy, &gw, , t.glass
+    off := 0
+    while GetKeyState("LButton", "P") {
+        MouseGetPos &x
+        off := Max(0, x - startX)
+        MoveThumb(t, gx + off, gy)
+        Sleep 10
+    }
+    if off < 40 {
+        MoveThumb(t, gx, gy)
+        return
+    }
+    while off < gw + 20 {
+        off += 30
+        MoveThumb(t, gx + off, gy)
+        Sleep 10
+    }
+    FinishThumb()
+}
+
+; Frosted-glass background: blurred desktop behind the window with a light tint.
+SetGlass(hwnd) {
+    accent := Buffer(16, 0)  ; ACCENT_POLICY
+    NumPut("int", 4, accent, 0)  ; ACCENT_ENABLE_ACRYLICBLURBEHIND
+    NumPut("uint", 0x55F2F2F2, accent, 8)  ; tint, AABBGGRR
+    data := Buffer(8 + 2 * A_PtrSize, 0)  ; WINDOWCOMPOSITIONATTRIBDATA
+    NumPut("uint", 19, data, 0)  ; WCA_ACCENT_POLICY
+    NumPut("ptr", accent.Ptr, data, A_PtrSize)
+    NumPut("uint", accent.Size, data, 2 * A_PtrSize)
+    DllCall("SetWindowCompositionAttribute", "ptr", hwnd, "ptr", data)
+}
+
+; Windows 11 rounded corners (and optionally a border colour, RGB) through DWM.
+Rounded(hwnd, pref, border := "") {
+    DllCall("dwmapi\DwmSetWindowAttribute", "ptr", hwnd, "uint", 33, "int*", pref, "uint", 4)  ; DWMWA_WINDOW_CORNER_PREFERENCE
+    if border != "" {
+        bgr := ((border & 0xFF) << 16) | (border & 0xFF00) | ((border >> 16) & 0xFF)
+        DllCall("dwmapi\DwmSetWindowAttribute", "ptr", hwnd, "uint", 34, "uint*", bgr, "uint", 4)  ; DWMWA_BORDER_COLOR
+    }
 }
 
 ThumbTick() {
@@ -295,7 +357,7 @@ ThumbTick() {
     if !IsObject(Thumb)
         return
     MouseGetPos &mx, &my, &win
-    over := (win = Thumb.gui.Hwnd)
+    over := (win = Thumb.gui.Hwnd || win = Thumb.glass.Hwnd)
     if over
         Thumb.deadline := A_TickCount + 3000
     else if A_TickCount > Thumb.deadline {
@@ -307,6 +369,12 @@ ThumbTick() {
     while GetKeyState("LButton", "P") {
         MouseGetPos &x, &y
         if Abs(x - mx) > 6 || Abs(y - my) > 6 {
+            ; mostly rightward = swipe away (the thumbnail sits at the right screen edge, so
+            ; drops into apps go left or up)
+            if x - mx > 2 * Abs(y - my) {
+                SwipeThumb(mx)
+                return
+            }
             if StartDrag(Thumb.file)
                 FinishThumb(false)
             return
@@ -354,6 +422,7 @@ FinishThumb(save := true) {
     t := Thumb
     Thumb := ""
     t.gui.Destroy()
+    t.glass.Destroy()
     if save {
         try FileMove(t.file, A_Desktop "\" t.name)
         catch
