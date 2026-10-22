@@ -10,7 +10,10 @@ CoordMode "Mouse", "Screen"
 ;   Cmd+Shift+4  -> region screenshot with draggable thumbnail
 ;   Cmd+C/V/A/Z/S/P/F -> copy / paste / select all / undo / save / print / find (Win key only)
 ;   Cmd+Shift+S  -> save as
-;   Cmd alone    -> emoji panel (Win+.) instead of Start
+;   Cmd+O/N/T/W/X -> open / new / new tab / close tab / cut (Win key only)
+;   Cmd+Plus/Minus/0 -> zoom in / out / reset (Win key only)
+;   Cmd+O in Explorer or on the desktop -> opens the selected item (Enter), like Finder
+;   Cmd alone   -> emoji panel (Win+.) instead of Start
 ;   Cmd+Tab      -> app switcher (Alt+Tab)
 ;   Cmd+Q        -> quit app (Alt+F4)
 ;   F3           -> Task View (Mission Control)
@@ -19,7 +22,6 @@ CoordMode "Mouse", "Screen"
 ;   Option+5/6/8/9 -> [ ] { },  Option+7 -> |,  Option+Shift+7 -> \,  Option+N -> ~
 ;   Shift+Backspace -> Delete (Mac keyboards have no forward-delete key)
 ;   Cmd+Space    -> Windows Search (Win key only; Alt+Space stays the window menu)
-;   Cmd+O in Explorer on a PDF -> opens it in Vorschau (vorschau\)
 
 global TempDir := A_Temp "\MacShots"
 global OverlayHwnd := 0
@@ -35,71 +37,29 @@ OnMessage(0x20, OnSetCursor)  ; WM_SETCURSOR
 SetTimer ThumbTick, 25
 A_IconTip := "Mac Features (Cmd+G = @, Cmd+Shift+4 = Screenshot)"
 
-IsVorschau() {
-    if !WinActive("ahk_exe msedge.exe") && !WinActive("ahk_exe chrome.exe")
-        return false
-    title := WinGetTitle("A")
-    return title = "Vorschau" || InStr(title, " – Vorschau")
-}
-
-#HotIf IsVorschau()
-#o::Send("^o")
-#r::Send("^r")
-#l::Send("^l")
-#+r::Send("^+r")
-#+a::Send("^+a")
-#=::Send("^=")
-#-::Send("^-")
-#NumpadAdd::Send("^{NumpadAdd}")
-#NumpadSub::Send("^{NumpadSub}")
-#0::Send("^0")
-#9::Send("^9")
-#BackSpace::Send("^{BackSpace}")
-#g::Send("^g")
-#n::Send("^n")
-#+g::Send("^+g")
-#x::Send("^x")
-#d::Send("^d")
-#t::Send("^t")
-#+Left::Send("^+{Left}")
-#+Right::Send("^+{Right}")
-#HotIf
-
-#o:: {
-    if WinActive("ahk_class CabinetWClass") {
-        pdfs := []
-        try {
-            hwnd := WinGetID("A")
-            for win in ComObject("Shell.Application").Windows() {
-                if win.HWND = hwnd {
-                    for item in win.Document.SelectedItems() {
-                        if StrLower(item.Path) ~= "\.pdf$"
-                            pdfs.Push(item.Path)
-                    }
-                    break
-                }
-            }
-        }
-        if pdfs.Length {
-            for f in pdfs
-                OpenVorschau(f)
-            return
-        }
-    }
-    Send("^o")
-}
-
 #g::SendText("@")
 <!g::SendText("@")
 #c::Send("^c")
 #v::Send("^v")  ; replaces Windows' clipboard history on Win+V
 #a::Send("^a")
-$#z::Send("^z")  ; Windows' own Win+Z (snap layouts) is also off via DisabledHotkeys
-#+z::Send("^y")  ; redo: Ctrl+Y works in Office, browsers and most Windows apps
+#z::Send("^z")
 $#s::Send("^s")  ; $ so the Send("#s") in Cmd+Space doesn't trigger it
 #+s::Send("^+s")  ; save as (replaces Windows' Snipping Tool on Win+Shift+S)
 #p::Send("^p")
 #f::Send("^f")  ; replaces Windows' Feedback Hub on Win+F
+#HotIf WinActive("ahk_class CabinetWClass") || WinActive("ahk_class Progman") || WinActive("ahk_class WorkerW")
+#o::Send("{Enter}")  ; Cmd+O in Finder: open the selected item
+#HotIf
+#o::Send("^o")  ; replaces Windows' orientation lock on Win+O
+#n::Send("^n")  ; replaces the notification centre on Win+N
+#t::Send("^t")  ; replaces the taskbar focus on Win+T
+#w::Send("^w")  ; replaces Widgets on Win+W
+#x::Send("^x")  ; replaces the power user menu on Win+X
+#=::Send("^=")  ; zoom in, replaces Magnifier on Win+Plus
+#-::Send("^-")
+#NumpadAdd::Send("^{NumpadAdd}")
+#NumpadSub::Send("^{NumpadSub}")
+#0::Send("^0")
 ; Cmd tapped alone -> emoji panel. The vkE8 mask keeps Windows from opening Start on release;
 ; A_PriorKey ignores script-generated input, so it is "LWin" only if nothing else was pressed.
 ~LWin::Send("{Blind}{vkE8}")
@@ -517,5 +477,3 @@ CleanOldShots() {
             try FileDelete A_LoopFileFullPath
     }
 }
-
-#Include vorschau\vorschau.ahk
