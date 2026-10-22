@@ -8,7 +8,7 @@ A single AutoHotkey v2 script, `mac-features.ahk`, that adds macOS-style shortcu
 
 - `Cmd+G` types `@` (`SendText`, so it doesn't depend on the layout).
 - `Cmd+O/N/T/W/X` and `Cmd+Plus/Minus/0` also send the matching Ctrl shortcut in every app (they replace Win+O orientation lock, Win+N notifications, Win+T taskbar focus, Win+W widgets, Win+X power menu and Win+Plus/Minus magnifier). `Cmd+O` sends Enter instead when Explorer or the desktop is active (`#HotIf` on `CabinetWClass`/`Progman`/`WorkerW`), like Finder. The separate PDF program Vorschau (`C:\Users\H2EAdmin\code\PDF-Editor`) uses Windows shortcuts and relies on this translation; its own extra Cmd shortcuts are in its optional `mac-keys.ahk`, not here.
-- `Cmd+C/V/A/Z/S/P/F` and `Cmd+Shift+S` send the matching Ctrl shortcut (Win+F would open the Feedback Hub). They're bound to the Win key only, so Alt+letter stays free for menu shortcuts. This replaces Windows' own Win+V (clipboard history), Win+A (quick settings), Win+Z (snap layouts), Win+S (search), Win+P (projection menu) and Win+Shift+S (Snipping Tool). `$#s` uses the keyboard hook so that `Send("#s")` from Cmd+Space doesn't trigger it.
+- `Cmd+C/V/A/Z/S/P/F` and `Cmd+Shift+S` send the matching Ctrl shortcut (Win+F would open the Feedback Hub). They're bound to the Win key only, so Alt+letter stays free for menu shortcuts. This replaces Windows' own Win+V (clipboard history), Win+A (quick settings), Win+Z (snap layouts), Win+S (search), Win+P (projection menu) and Win+Shift+S (Snipping Tool). `$#s` uses the keyboard hook so that `Send("#s")` from Cmd+Space doesn't trigger it. `Cmd+Shift+Z` (redo) sends Ctrl+Y.
 - Tapping `Cmd` alone opens the emoji panel (`#.`) instead of Start. `~LWin` sends the `vkE8` mask key so Windows doesn't open Start, and `~LWin Up` checks `A_PriorKey`, which ignores script-generated input. Start is still reachable with Ctrl+Esc.
 - Windows Search (`#s`) and the Alt+Tab switcher always open on the primary monitor, no matter where the mouse, the foreground window or the last-used taskbar is (tested). The user is fine with that, so there's no workaround.
 - `Cmd+Tab` is AHK's built-in `AltTab` action as a custom combination (`LWin & Tab`), so the switcher stays open while Cmd is held. This replaces Task View.
@@ -31,7 +31,7 @@ $ahk = "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe"
 & $ahk /ErrorStdOut /validate mac-features.ahk   # syntax check only
 ```
 
-The Mac keyboard's Cmd key reports as the Win key. Windows' own Win+G (Xbox Game Bar) fires even though AHK grabs the hotkey, so it's turned off with `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\DisabledHotkeys = "G"`. That takes effect after an Explorer restart or a new sign-in.
+The Mac keyboard's Cmd key reports as the Win key. Windows' own Win+G (Xbox Game Bar) and Win+Z (snap layouts) fire even though AHK grabs the hotkeys, so both are turned off with `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\DisabledHotkeys = "GZ"`. That takes effect after an Explorer restart or a new sign-in.
 
 Autostart is a shortcut in `shell:startup` (`Mac Features.lnk`) that points to this script. `install.ps1` sets everything up: it installs AHK, creates the autostart shortcut, applies the Win+G registry fix and starts the script. It can be re-run safely. `README.md` is the German user guide and must be kept in sync whenever shortcuts change.
 

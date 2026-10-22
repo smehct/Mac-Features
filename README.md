@@ -13,7 +13,7 @@ Auf einer Mac-Tastatur kommt die Cmd-Taste unter Windows als Windows-Taste an, d
 | Cmd allein drücken | Emoji-Fenster öffnen |
 | Cmd+C / Cmd+V | Kopieren / Einfügen |
 | Cmd+A | Alles markieren |
-| Cmd+Z | Rückgängig |
+| Cmd+Z / Cmd+Shift+Z | Rückgängig / Wiederholen |
 | Cmd+S / Cmd+Shift+S | Speichern / Speichern unter |
 | Cmd+P | Drucken |
 | Cmd+F | Suchen im Programm |
@@ -86,10 +86,10 @@ Ausserdem sind die Taste links neben der 1 (§ °) und die Taste neben der linke
 2. Das Repository herunterladen und entpacken (siehe oben).
 3. Doppelklick auf `mac-features.ahk`. Unten rechts im Infobereich erscheint ein grünes H-Symbol, dann ist alles aktiv.
 4. Autostart: `Win+R` drücken, `shell:startup` eingeben und eine Verknüpfung zu `mac-features.ahk` in diesen Ordner legen.
-5. Damit Cmd+G nicht zusätzlich die Xbox Game Bar öffnet, in PowerShell ausführen und danach ab- und wieder anmelden:
+5. Damit Cmd+G nicht zusätzlich die Xbox Game Bar und Cmd+Z nicht die Fenster-Layouts öffnet, in PowerShell ausführen und danach ab- und wieder anmelden:
 
    ```powershell
-   Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name DisabledHotkeys -Value "G"
+   Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name DisabledHotkeys -Value "GZ"
    ```
 
 **Wichtig:** Den Ordner nach der Installation nicht verschieben, sonst findet der Autostart das Skript nicht mehr. Falls doch, `install.ps1` am neuen Ort nochmals ausführen.

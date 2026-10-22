@@ -13,7 +13,7 @@ CoordMode "Mouse", "Screen"
 ;   Cmd+O/N/T/W/X -> open / new / new tab / close tab / cut (Win key only)
 ;   Cmd+Plus/Minus/0 -> zoom in / out / reset (Win key only)
 ;   Cmd+O in Explorer or on the desktop -> opens the selected item (Enter), like Finder
-;   Cmd alone   -> emoji panel (Win+.) instead of Start
+;   Cmd alone    -> emoji panel (Win+.) instead of Start
 ;   Cmd+Tab      -> app switcher (Alt+Tab)
 ;   Cmd+Q        -> quit app (Alt+F4)
 ;   F3           -> Task View (Mission Control)
@@ -42,7 +42,8 @@ A_IconTip := "Mac Features (Cmd+G = @, Cmd+Shift+4 = Screenshot)"
 #c::Send("^c")
 #v::Send("^v")  ; replaces Windows' clipboard history on Win+V
 #a::Send("^a")
-#z::Send("^z")
+$#z::Send("^z")  ; Windows' own Win+Z (snap layouts) is also off via DisabledHotkeys
+#+z::Send("^y")  ; redo: Ctrl+Y works in Office, browsers and most Windows apps
 $#s::Send("^s")  ; $ so the Send("#s") in Cmd+Space doesn't trigger it
 #+s::Send("^+s")  ; save as (replaces Windows' Snipping Tool on Win+Shift+S)
 #p::Send("^p")

@@ -1,5 +1,5 @@
 # Sets up mac-features.ahk: installs AutoHotkey v2, adds an autostart shortcut,
-# turns off Windows' own Win+G (Xbox Game Bar) and starts the script.
+# turns off Windows' own Win+G (Xbox Game Bar) and Win+Z (snap layouts) and starts the script.
 # Run from the repository folder:  powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 $ErrorActionPreference = "Stop"
@@ -20,8 +20,8 @@ $shortcut.Arguments = "`"$script`""
 $shortcut.WorkingDirectory = $PSScriptRoot
 $shortcut.Save()
 
-Write-Host "Schalte Win+G (Xbox Game Bar) ab ..."
-Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name DisabledHotkeys -Value "G" -Type String
+Write-Host "Schalte Win+G (Xbox Game Bar) und Win+Z (Fenster-Layouts) ab ..."
+Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name DisabledHotkeys -Value "GZ" -Type String
 
 Write-Host "Starte das Skript ..."
 Start-Process $ahk -ArgumentList "`"$script`""
