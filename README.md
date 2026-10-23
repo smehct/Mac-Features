@@ -38,6 +38,7 @@ Funktioniert mit der linken und der rechten Option-Taste.
 | Option+7 | `\|` |
 | Option+Shift+7 | `\` |
 | Option+N | `~` |
+| Option+G | `@` (wie Cmd+G) |
 
 Ausserdem sind die Taste links neben der 1 (§ °) und die Taste neben der linken Shift-Taste (< >) getauscht, damit sie das liefern, was draufsteht.
 

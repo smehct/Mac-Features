@@ -39,6 +39,7 @@ A_IconTip := "Mac Features (Cmd+G = @, Cmd+Shift+4 = Screenshot)"
 
 #g::SendText("@")
 <!g::SendText("@")
+<^>!g::SendText("@")  ; right Option arrives as AltGr
 #c::Send("^c")
 #v::Send("^v")  ; replaces Windows' clipboard history on Win+V
 #a::Send("^a")

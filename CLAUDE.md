@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A single AutoHotkey v2 script, `mac-features.ahk`, that adds macOS-style shortcuts to Windows for a user with a Mac keyboard and a Swiss German (de-CH, 0807) layout. "Cmd" is bound to both the Win key (`#`) and left Alt (`<!`), because it's unclear which one the Mac keyboard's Cmd key reports. Use left Alt only (`<!`), since AltGr on de-CH arrives as LCtrl+RAlt.
 
-- `Cmd+G` types `@` (`SendText`, so it doesn't depend on the layout).
+- `Cmd+G` and `Option+G` (left `<!g` and right `<^>!g`, like the Mac de-CH layout) type `@` (`SendText`, so it doesn't depend on the layout).
 - `Cmd+O/N/T/W/X` and `Cmd+Plus/Minus/0` also send the matching Ctrl shortcut in every app (they replace Win+O orientation lock, Win+N notifications, Win+T taskbar focus, Win+W widgets, Win+X power menu and Win+Plus/Minus magnifier). `Cmd+O` sends Enter instead when Explorer or the desktop is active (`#HotIf` on `CabinetWClass`/`Progman`/`WorkerW`), like Finder. The separate PDF program Vorschau (`C:\Users\H2EAdmin\code\PDF-Editor`) uses Windows shortcuts and relies on this translation; its own extra Cmd shortcuts are in its optional `mac-keys.ahk`, not here.
 - `Cmd+C/V/A/Z/S/P/F` and `Cmd+Shift+S` send the matching Ctrl shortcut (Win+F would open the Feedback Hub). They're bound to the Win key only, so Alt+letter stays free for menu shortcuts. This replaces Windows' own Win+V (clipboard history), Win+A (quick settings), Win+Z (snap layouts), Win+S (search), Win+P (projection menu) and Win+Shift+S (Snipping Tool). `$#s` uses the keyboard hook so that `Send("#s")` from Cmd+Space doesn't trigger it. `Cmd+Shift+Z` (redo) sends Ctrl+Y.
 - Tapping `Cmd` alone opens the emoji panel (`#.`) instead of Start. `~LWin` sends the `vkE8` mask key so Windows doesn't open Start, and `~LWin Up` checks `A_PriorKey`, which ignores script-generated input. Start is still reachable with Ctrl+Esc.
@@ -30,6 +30,8 @@ $ahk = "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe"
 & $ahk mac-features.ahk                      # run / reload (#SingleInstance Force replaces the running copy)
 & $ahk /ErrorStdOut /validate mac-features.ahk   # syntax check only
 ```
+
+To reload the user's live copy from a Claude Code session, launch it through Explorer (outside the sandbox): `Start-Process explorer.exe "<shell:startup>\Mac Features.lnk"`. A copy started directly from the session's shell is a child of the session and dies when the session restarts, so all shortcuts silently stop working.
 
 The Mac keyboard's Cmd key reports as the Win key. Windows' own Win+G (Xbox Game Bar) and Win+Z (snap layouts) fire even though AHK grabs the hotkeys, so both are turned off with `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\DisabledHotkeys = "GZ"`. That takes effect after an Explorer restart or a new sign-in.
 
