@@ -23,7 +23,7 @@ Auf einer Mac-Tastatur kommt die Cmd-Taste unter Windows als Windows-Taste an, d
 | Cmd+Q | Programm beenden (auf Desktop und Taskleiste absichtlich ohne Wirkung) |
 | Cmd+Tab | Zwischen offenen Programmen wechseln |
 | Cmd+Leertaste | Windows-Suche öffnen (wie Spotlight) |
-| Cmd+G | `@` |
+| Cmd+G / Cmd+Shift+G | Weitersuchen / Rückwärts suchen (im Browser; in Word und Excel öffnet Cmd+G „Gehe zu“) |
 | Cmd+Shift+4 | Screenshot eines Bereichs (siehe unten) |
 | Shift+Löschen | Zeichen rechts vom Cursor löschen (Entf) |
 
@@ -38,7 +38,7 @@ Funktioniert mit der linken und der rechten Option-Taste.
 | Option+7 | `\|` |
 | Option+Shift+7 | `\` |
 | Option+N | `~` |
-| Option+G | `@` (wie Cmd+G) |
+| Option+G | `@` |
 
 Ausserdem sind die Taste links neben der 1 (§ °) und die Taste neben der linken Shift-Taste (< >) getauscht, damit sie das liefern, was draufsteht.
 

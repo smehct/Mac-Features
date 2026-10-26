@@ -6,7 +6,7 @@ CoordMode "Mouse", "Screen"
 ; Mac-style shortcuts for Windows.
 ; "Cmd" is mapped to both the Win key and the left Alt key, because a Mac keyboard
 ; on Windows reports Cmd as Win (default) or Alt (if swapped in the driver).
-;   Cmd+G        -> types "@"
+;   Cmd+G / Cmd+Shift+G -> find next / previous (Ctrl+G / Ctrl+Shift+G);  Option+G -> "@"
 ;   Cmd+Shift+4  -> region screenshot with draggable thumbnail
 ;   Cmd+C/V/A/Z/S/P/F -> copy / paste / select all / undo / save / print / find (Win key only)
 ;   Cmd+Shift+S  -> save as
@@ -35,9 +35,10 @@ DllCall("LoadLibrary", "str", "gdiplus")
 DllCall("ole32\OleInitialize", "ptr", 0)
 OnMessage(0x20, OnSetCursor)  ; WM_SETCURSOR
 SetTimer ThumbTick, 25
-A_IconTip := "Mac Features (Cmd+G = @, Cmd+Shift+4 = Screenshot)"
+A_IconTip := "Mac Features (Option+G = @, Cmd+Shift+4 = Screenshot)"
 
-#g::SendText("@")
+#g::Send("^g")  ; find next, like Cmd+G on the Mac (Word/Excel: Go To)
+#+g::Send("^+g")  ; find previous
 <!g::SendText("@")
 <^>!g::SendText("@")  ; right Option arrives as AltGr
 #c::Send("^c")
