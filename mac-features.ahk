@@ -168,7 +168,12 @@ DdcMonitor(hmon, hdc, rect, data) {
 
 ; ---------------------------------------------------------------- selection
 
+; AHK is only system-DPI aware. Without this, coordinates and BitBlt are scaled on monitors
+; whose DPI differs from the system DPI, so the capture is shifted and blurry.
+PerMonitorDpi() => DllCall("SetThreadDpiAwarenessContext", "ptr", -4, "ptr")
+
 StartShot() {
+    PerMonitorDpi()
     global ShotActive, ShotCancelled, OverlayHwnd
     if ShotActive
         return
@@ -372,6 +377,7 @@ Rounded(hwnd, pref, border := "") {
 }
 
 ThumbTick() {
+    PerMonitorDpi()
     global Thumb
     if !IsObject(Thumb)
         return
