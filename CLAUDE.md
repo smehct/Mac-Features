@@ -13,9 +13,10 @@ A single AutoHotkey v2 script, `mac-features.ahk`, that adds macOS-style shortcu
 - Windows Search (`#s`) and the Alt+Tab switcher always open on the primary monitor, no matter where the mouse, the foreground window or the last-used taskbar is (tested). The user is fine with that, so there's no workaround.
 - `Cmd+Tab` is AHK's built-in `AltTab` action as a custom combination (`LWin & Tab`), so the switcher stays open while Cmd is held. This replaces Task View.
 - `F3` opens Task View (`#{Tab}`), like Mission Control. This replaces "find next" in apps.
-- F-keys work like the Mac media keys: F1/F2 change brightness (laptop panel via WMI `WmiMonitorBrightnessMethods`, external monitors via DDC/CI `dxva2` in `AdjustBrightness`), F7/F8/F9 do previous/play-pause/next, F10/F11/F12 do mute/volume down/volume up. This replaces the apps' own F1 (help), F7–F12, etc.
+- Outside AutoCAD (`acad.exe`, which needs its F-keys), F-keys work like the Mac media keys: F1/F2 change brightness (laptop panel via WMI `WmiMonitorBrightnessMethods`, external monitors via DDC/CI `dxva2` in `AdjustBrightness`), F7/F8/F9 do previous/play-pause/next, F10/F11/F12 do mute/volume down/volume up. This replaces the apps' own F1 (help), F7–F12, etc.
 - `Option+5/6/8/9` type `[ ] { }`, `Option+7` types `|`, `Option+Shift+7` types `\`, and `Option+N` types `~` (directly, not as a dead key), like the Mac de-CH layout. Left Option arrives as `<!`, right Option as AltGr (`<^>!`), so both are bound.
 - `SC029`↔`SC056` are swapped, because a Mac ISO keyboard sends the §/° key and the </> key the wrong way round under de-CH.
+- On the built-in keyboard (Raw Input device name contains `ACPI#`, tracked in `OnRawInput`) Alt acts as Cmd and Win as Option, matching the key positions of the Mac keyboard; the `SC029`↔`SC056` swap is off there. Alt+letter menu shortcuts are replaced on that keyboard.
 - `Cmd+Q` sends Alt+F4, but not when the desktop or taskbar is active, because there Alt+F4 opens the shutdown dialog.
 - `Shift+Backspace` sends `{Delete}`, because the Mac keyboard has no forward-delete key. `Send` releases Shift first, so in Explorer files go to the Recycle Bin instead of being deleted permanently (which Shift+Del would do).
 - `Cmd+Space` opens Windows Search (`#s`), like Spotlight. It's bound to the Win key only and replaces Windows' input-language switcher on Win+Space.
@@ -33,7 +34,7 @@ $ahk = "$env:LOCALAPPDATA\Programs\AutoHotkey\v2\AutoHotkey64.exe"
 
 To reload the user's live copy from a Claude Code session, launch it through Explorer (outside the sandbox): `Start-Process explorer.exe "<shell:startup>\Mac Features.lnk"`. A copy started directly from the session's shell is a child of the session and dies when the session restarts, so all shortcuts silently stop working.
 
-The Mac keyboard's Cmd key reports as the Win key. Windows' own Win+G (Xbox Game Bar) and Win+Z (snap layouts) fire even though AHK grabs the hotkeys, so both are turned off with `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\DisabledHotkeys = "GZ"`. That takes effect after an Explorer restart or a new sign-in.
+The Mac keyboard's Cmd key reports as the Win key. Windows' own Win+G (Xbox Game Bar) and Win+Z (snap layouts) fire even though AHK grabs the hotkeys, so both are turned off with `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\DisabledHotkeys = "GZ"`. That takes effect after an Explorer restart or a new sign-in. On this PC that was not enough for Win+G, so the Xbox Game Bar package (`Microsoft.XboxGamingOverlay`) was removed for the user, and `HKCU\Software\Classes\ms-gamebar` and `ms-gamingoverlay` point to `systray.exe` so Windows shows no "get an app" prompt. To undo: delete those two keys and reinstall Game Bar from the Store.
 
 Autostart is a shortcut in `shell:startup` (`Mac Features.lnk`) that points to this script. `install.ps1` sets everything up: it installs AHK, creates the autostart shortcut, applies the Win+G registry fix and starts the script. It can be re-run safely. `README.md` is the German user guide and must be kept in sync whenever shortcuts change.
 

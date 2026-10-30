@@ -51,6 +51,12 @@ Ausserdem sind die Taste links neben der 1 (§ °) und die Taste neben der linke
 | F7 / F8 / F9 | Vorheriger Titel / Play-Pause / Nächster Titel |
 | F10 / F11 / F12 | Stumm / Leiser / Lauter |
 
+In AutoCAD behalten alle F-Tasten ihre normale Funktion (Objektfang, Raster, Ortho usw.).
+
+### Laptop-Tastatur
+
+Auf der eingebauten Tastatur liegt Alt dort, wo beim Mac Cmd ist, und die Windows-Taste dort, wo Option ist. Deshalb gilt dort: Alt+C, Alt+V, Alt+F usw. wie Cmd, Windows+G (`@`), Windows+5 (`[`) usw. wie Option. Das Skript erkennt selbst, von welcher Tastatur ein Tastendruck kommt. Die Alt-Menükürzel der Programme fallen auf dieser Tastatur für diese Buchstaben weg.
+
 ### Screenshot wie beim Mac
 
 1. **Cmd+Shift+4** drücken. Der Bildschirm wird abgedunkelt, der Mauszeiger zum Fadenkreuz.

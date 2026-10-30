@@ -36,9 +36,10 @@ DllCall("ole32\OleInitialize", "ptr", 0)
 OnMessage(0x20, OnSetCursor)  ; WM_SETCURSOR
 SetTimer ThumbTick, 25
 A_IconTip := "Mac Features (Option+G = @, Cmd+Shift+4 = Screenshot)"
+WatchKeyboards()
 
-#g::Send("^g")  ; find next, like Cmd+G on the Mac (Word/Excel: Go To)
-#+g::Send("^+g")  ; find previous
+$#g::Send("^g")  ; find next, like Cmd+G on the Mac (Word/Excel: Go To)
+$#+g::Send("^+g")  ; find previous
 <!g::SendText("@")
 <^>!g::SendText("@")  ; right Option arrives as AltGr
 #c::Send("^c")
@@ -72,6 +73,7 @@ $#s::Send("^s")  ; $ so the Send("#s") in Cmd+Space doesn't trigger it
 LWin & Tab::AltTab  ; app switcher stays open while Cmd is held (replaces Task View)
 RWin & Tab::AltTab
 #q::QuitApp()
+#HotIf !WinActive("ahk_exe acad.exe")  ; AutoCAD needs its F-keys (osnap, grid, ortho, ...)
 F3::Send("#{Tab}")  ; Mission Control -> Task View (replaces "find next" in apps)
 F1::AdjustBrightness(-10)
 F2::AdjustBrightness(10)
@@ -81,6 +83,7 @@ F9::Send("{Media_Next}")
 F10::Send("{Volume_Mute}")
 F11::Send("{Volume_Down}")
 F12::Send("{Volume_Up}")
+#HotIf
 ; Mac de-CH brackets on Option (left Alt, or right Option which Windows reports as AltGr)
 <!5::SendText("[")
 <!6::SendText("]")
@@ -97,12 +100,89 @@ F12::Send("{Volume_Up}")
 <^>!+7::SendText("\")
 <^>!n::SendText("~")
 ; Mac ISO keyboards report the §/° key and the </> key swapped under Windows' de-CH layout.
+#HotIf !OnLaptopKeyboard()
 SC029::SC056
 SC056::SC029
+#HotIf
 +BS::Send("{Delete}")  ; forward delete; Shift is released, so Explorer recycles instead of hard-deleting
 #Space::Send("#s")  ; Spotlight -> Windows Search (replaces the input-language switcher)
 #+4::StartShot()
 <!+4::StartShot()
+
+; Laptop keyboard: Alt sits where Cmd is on the Mac keyboard, Win where Option is, so the
+; two swap roles there. Only the Win+letter hotkeys that clash with Option are overridden.
+#HotIf OnLaptopKeyboard() && (WinActive("ahk_class CabinetWClass") || WinActive("ahk_class Progman") || WinActive("ahk_class WorkerW"))
+<!o::Send("{Enter}")
+#HotIf OnLaptopKeyboard()
+<!o::Send("^o")
+<!g::Send("^g")
+<!+g::Send("^+g")
+<!c::Send("^c")
+<!v::Send("^v")
+<!a::Send("^a")
+<!z::Send("^z")
+<!+z::Send("^y")
+<!s::Send("^s")
+<!+s::Send("^+s")
+<!p::Send("^p")
+<!f::Send("^f")
+<!n::Send("^n")
+<!t::Send("^t")
+<!w::Send("^w")
+<!x::Send("^x")
+<!=::Send("^=")
+<!-::Send("^-")
+<!NumpadAdd::Send("^{NumpadAdd}")
+<!NumpadSub::Send("^{NumpadSub}")
+<!0::Send("^0")
+<!q::QuitApp()
+<!Space::Send("#s")
+$#g::SendText("@")
+$#5::SendText("[")
+$#6::SendText("]")
+$#8::SendText("{")
+$#9::SendText("}")
+$#7::SendText("|")
+$#+7::SendText("\")
+$#n::SendText("~")
+#HotIf
+
+; Raw Input reports which keyboard each key came from. The modifier is pressed before the
+; letter, so this is up to date when a hotkey's #HotIf is evaluated. Script-generated input
+; has no device and is ignored.
+global LastKeyFromLaptop := false
+
+WatchKeyboards() {
+    rid := Buffer(8 + A_PtrSize, 0)  ; RAWINPUTDEVICE
+    NumPut("ushort", 1, rid, 0)  ; generic desktop
+    NumPut("ushort", 6, rid, 2)  ; keyboard
+    NumPut("uint", 0x100, rid, 4)  ; RIDEV_INPUTSINK: also while in the background
+    NumPut("ptr", A_ScriptHwnd, rid, 8)
+    DllCall("RegisterRawInputDevices", "ptr", rid, "uint", 1, "uint", rid.Size)
+    OnMessage(0xFF, OnRawInput)  ; WM_INPUT
+}
+
+OnRawInput(wParam, lParam, msg, hwnd) {
+    global LastKeyFromLaptop
+    static laptop := Map()
+    head := Buffer(8 + 2 * A_PtrSize, 0)  ; RAWINPUTHEADER
+    size := head.Size
+    if DllCall("GetRawInputData", "ptr", lParam, "uint", 0x10000005, "ptr", head, "uint*", &size, "uint", head.Size, "uint") = 0xFFFFFFFF
+        return
+    dev := NumGet(head, 8, "ptr")
+    if !dev
+        return
+    if !laptop.Has(dev) {
+        len := 0
+        DllCall("GetRawInputDeviceInfoW", "ptr", dev, "uint", 0x20000007, "ptr", 0, "uint*", &len)  ; RIDI_DEVICENAME
+        name := Buffer(len * 2 + 2, 0)
+        DllCall("GetRawInputDeviceInfoW", "ptr", dev, "uint", 0x20000007, "ptr", name, "uint*", &len)
+        laptop[dev] := InStr(StrGet(name), "ACPI#") > 0  ; built-in keyboards are ACPI devices
+    }
+    LastKeyFromLaptop := laptop[dev]
+}
+
+OnLaptopKeyboard() => LastKeyFromLaptop
 
 EmojiIfAlone(key) {
     if A_PriorKey = key
